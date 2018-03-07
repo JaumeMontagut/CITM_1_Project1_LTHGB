@@ -1,14 +1,17 @@
 #include "SDL\include\SDL.h"
 #include "SDL\include\SDL_image.h"
 #include "SDL\include\SDL_mixer.h"
+#include <time.h>//To calculate the random positions
 
 #pragma comment (lib,"SDL/x86/SDL2.lib")
 #pragma comment (lib,"SDL/x86/SDL2main.lib")
 #pragma comment (lib,"SDL/x86/SDL2_image.lib")
-#pragma comment (lib, "SDL/x86/SDL2_mixer.lib");
+#pragma comment (lib, "SDL/x86/SDL2_mixer.lib")
 
 #define screenWitdh 1280
 #define screenHeight 720
+#define pushDist 10
+#define pushDistMultiplier 5
 //All image sizes are ajustaded automatically except for the background image
 
 int main(int argc, char* argv[])
@@ -16,23 +19,28 @@ int main(int argc, char* argv[])
 	//Declaration
 	bool playing;
 	bool pressingUp, pressingLeft, pressingDown, pressingRight, pressingW, pressingA, pressingS, pressingD;
-	int i = 0;
+	bool pushP2 = false, pushP1 = false;
+	bool timeFinished = false;
+	bool p1IsIn = false, p2IsIn = false;
 	int characterWitdh = 0, characterHeight = 0;
-	int projectileWitdh = 0, projectileHeight = 0;
 	int characterSpeed;
-	int projectileSpeed;
 	int pushR1Pos = 0;//1 = up, 2 = left, 3 = down, 4 = right
 	int pushR2Pos = 0;
-	int pushR1Counter = 0;
+	int pushR1Counter = 0, pushR2Counter = 0;
 	SDL_Window * window = nullptr;
 	SDL_Renderer* renderer = nullptr;;
 	SDL_Event event;
-	SDL_Texture * characterTx = nullptr;;
-	SDL_Texture * backgroundTx = nullptr;;
+	SDL_Texture * p1Tx = nullptr;
+	SDL_Texture * p2Tx = nullptr;
+	SDL_Texture * backgroundTx = nullptr;
+	SDL_Texture * winTx = nullptr;
+	SDL_Texture * loseTx = nullptr;
 	SDL_Rect p1Rect;
 	SDL_Rect p2Rect;
 	SDL_Rect pushR1;
 	SDL_Rect pushR2;
+	SDL_Rect p1Screen;
+	SDL_Rect p2Screen;
 	Mix_Music * music = nullptr;
 	SDL_Rect objectiveR;
 
@@ -47,7 +55,6 @@ int main(int argc, char* argv[])
 	pressingS = false;
 	pressingD = false;
 	characterSpeed = 5;
-	projectileSpeed = 10;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	window = SDL_CreateWindow("MyAwesomeGame", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWitdh, screenHeight, SDL_WINDOW_OPENGL);
@@ -55,9 +62,12 @@ int main(int argc, char* argv[])
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
 
 	IMG_Init(IMG_INIT_PNG);
-	characterTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Character.png"));
+	p1Tx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Character1.png"));
+	p2Tx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Character2.png"));
 	backgroundTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Background.png"));
-	SDL_QueryTexture(characterTx, nullptr, nullptr, &characterWitdh, &characterHeight);
+	winTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Win.png"));
+	loseTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Lose.png"));
+	SDL_QueryTexture(p1Tx, nullptr, nullptr, &characterWitdh, &characterHeight);//Els dos personatges haurien de tenir la mateixa mida, de manera que no caldria repetir aixo dos cops
 	p1Rect.x = screenWitdh / 2 - characterWitdh / 2;
 	p1Rect.y = screenHeight / 2 - characterHeight / 2;
 	p1Rect.w = characterWitdh;
@@ -78,6 +88,14 @@ int main(int argc, char* argv[])
 	objectiveR.y = 100;
 	objectiveR.w = 75;
 	objectiveR.h = 75;
+	p1Screen.x = 0;
+	p1Screen.y = 0;
+	p1Screen.w = screenWitdh/2;
+	p1Screen.h = screenHeight;
+	p2Screen.x = screenWitdh / 2;
+	p2Screen.y = 0;
+	p2Screen.w = screenWitdh / 2;
+	p2Screen.h = screenHeight;
 
 	Mix_Init(MIX_INIT_OGG);
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
@@ -134,23 +152,28 @@ int main(int argc, char* argv[])
 						//SFX
 						if((p2Rect.x + p2Rect.w) > pushR1.x && p2Rect.x < (pushR1.x + pushR1.w) && (p2Rect.y + p2Rect.h) > pushR1.y && p2Rect.y < (pushR1.y + pushR1.h))
 						{
-							switch(pushR1Pos)
-							{
-							case 1:
-								p2Rect.y -= 50;
-								break;
-							case 2:
-								p2Rect.x -= 50;
-								break;
-							case 3:
-								p2Rect.y += 50;
-								break;
-							case 4:
-								p2Rect.x += 50;
-								break;
-								//!POSSIBLE IMPROVEMENT: Amb una funcio podria passar la direccio simplement i ja em posaria cap on va
-							}
+							pushP2 = true;
 						}
+						break;
+					case SDLK_0:
+					case SDLK_KP_0:
+						//SFX
+						if ((p1Rect.x + p1Rect.w) > pushR2.x && p1Rect.x < (pushR2.x + pushR2.w) && (p1Rect.y + p1Rect.h) > pushR2.y && p1Rect.y < (pushR2.y + pushR2.h))
+						{
+							pushP1 = true;
+						}
+						break;
+					case SDLK_KP_ENTER:
+						if(timeFinished == false)
+						{
+							timeFinished = true;
+						}
+						else if(timeFinished = true)
+						{
+							timeFinished = false;
+						}
+						
+						break;
 					}
 					break;
 				case SDL_KEYUP:
@@ -186,7 +209,7 @@ int main(int argc, char* argv[])
 		}
 
 		//Logic
-		//Player 1
+		//- Player 1
 		if (pressingW == true && p1Rect.y > 0)
 		{
 			p1Rect.y -= characterSpeed;
@@ -203,7 +226,7 @@ int main(int argc, char* argv[])
 		{
 			p1Rect.x += characterSpeed;
 		}
-		//Player 2
+		//- Player 2
 		if (pressingUp == true && p2Rect.y > 0)
 		{
 			p2Rect.y -= characterSpeed;
@@ -220,9 +243,13 @@ int main(int argc, char* argv[])
 		{
 			p2Rect.x += characterSpeed;
 		}
-		//Push rectangle 1 position
+		//- Push rectangle 1 position
 		switch(pushR1Pos)
 		{
+		case 0:
+			pushR1.x = (p1Rect.x + p1Rect.h / 2) - (pushR1.h / 2);
+			pushR1.y = (p1Rect.y + p1Rect.w / 2) - (pushR1.w / 2);
+			break;
 		case 1:
 			pushR1.y = p1Rect.y - pushR1.h;
 			pushR1.x = p1Rect.x;
@@ -240,9 +267,13 @@ int main(int argc, char* argv[])
 			pushR1.y = p1Rect.y;
 			break;
 		}
-		//Push rectangle 2 position
+		//- Push rectangle 2 position
 		switch (pushR2Pos)
 		{
+		case 0:
+			pushR2.x = (p2Rect.x + p2Rect.h / 2) - (pushR2.h / 2);
+			pushR2.y = (p2Rect.y + p2Rect.w / 2) - (pushR2.w / 2);
+			break;
 		case 1:
 			pushR2.y = p2Rect.y - pushR2.h;
 			pushR2.x = p2Rect.x;
@@ -260,39 +291,122 @@ int main(int argc, char* argv[])
 			pushR2.y = p2Rect.y;
 			break;
 		}
-		//Push rectangle 1 action
-		//if(pushR1Counter < 10)
-		//{
-
-		//}
-		//Push rectangle 2 action
+		//- Push rectangle 1 action
+		if(pushP2 == true)
+		{
+			switch (pushR1Pos)
+			{
+			case 1:
+				p2Rect.y -= pushDist;
+				break;
+			case 2:
+				p2Rect.x -= pushDist;
+				break;
+			case 3:
+				p2Rect.y += pushDist;
+				break;
+			case 4:
+				p2Rect.x += pushDist;
+				break;
+			}
+			if (pushR1Counter == pushDistMultiplier)
+			{
+				pushP2 = false;
+				pushR1Counter = 0;
+			}
+			pushR1Counter++;
+		}
+		//- Push rectangle 2 action
+		if (pushP1 == true)
+		{
+			switch (pushR2Pos)
+			{
+			case 1:
+				p1Rect.y -= pushDist;
+				break;
+			case 2:
+				p1Rect.x -= pushDist;
+				break;
+			case 3:
+				p1Rect.y += pushDist;
+				break;
+			case 4:
+				p1Rect.x += pushDist;
+				break;
+			}
+			if (pushR2Counter == pushDistMultiplier)
+			{
+				pushP1 = false;
+				pushR2Counter = 0;
+			}
+			pushR2Counter++;
+		}
 
 		//Render
-		SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
+		//- Time finish
+		if (timeFinished == true)
+		{
+			p1IsIn = 0;
+			p2IsIn = 0;
+			//Player 1 is on the objective
+			if ((p1Rect.x + p1Rect.w) > objectiveR.x && p1Rect.x < (objectiveR.x + objectiveR.w) && (p1Rect.y + p1Rect.h) > objectiveR.y && p1Rect.y < (objectiveR.y + objectiveR.h))
+			{
+				p1IsIn = true;
+			}
+			if((p2Rect.x + p2Rect.w) > objectiveR.x && p2Rect.x < (objectiveR.x + objectiveR.w) && (p2Rect.y + p2Rect.h) > objectiveR.y && p2Rect.y < (objectiveR.y + objectiveR.h))
+			{
+				p2IsIn = true;
+			}
 
-		if((p1Rect.x + p1Rect.w) > objectiveR.x && p1Rect.x < (objectiveR.x + objectiveR.w) && (p1Rect.y + p1Rect.h) > objectiveR.y && p1Rect.y < (objectiveR.y + objectiveR.h))
-		{
-			SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-		}
-		else if((p2Rect.x + p2Rect.w) > objectiveR.x && p2Rect.x < (objectiveR.x + objectiveR.w) && (p2Rect.y + p2Rect.h) > objectiveR.y && p2Rect.y < (objectiveR.y + objectiveR.h))
-		{
-			SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+			if (p1IsIn == true && p2IsIn == true)
+			{
+				//Continue normally
+			}
+			else if (p1IsIn == true && p2IsIn == false)
+			{
+				SDL_RenderCopy(renderer, winTx, NULL, &p1Screen);
+				SDL_RenderCopy(renderer, loseTx, NULL, &p2Screen);
+				//Pausar joc
+			}
+			else if (p1IsIn == false && p2IsIn == true)
+			{
+				SDL_RenderCopy(renderer, loseTx, NULL, &p1Screen);
+				SDL_RenderCopy(renderer, winTx, NULL, &p2Screen);
+				//Pausar joc
+			}
+			else if (p1IsIn == false && p2IsIn == false)
+			{
+				SDL_RenderCopy(renderer, loseTx, NULL, &p1Screen);
+				SDL_RenderCopy(renderer, loseTx, NULL, &p2Screen);
+				//Pausar joc
+			}
+			//cambiar la posicio del rectangle
+			//timeFinished = false;
 		}
 		else
 		{
-			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+			//- Normal sprites
+			SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
+
+			if (timeFinished == true)
+			{
+				SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+			}
+			SDL_RenderFillRect(renderer, &objectiveR);
+
+			SDL_SetRenderDrawColor(renderer, 102, 0, 153, 255);
+			SDL_RenderFillRect(renderer, &pushR1);
+
+			SDL_SetRenderDrawColor(renderer, 102, 0, 153, 255);
+			SDL_RenderFillRect(renderer, &pushR2);
+
+			SDL_RenderCopy(renderer, p1Tx, NULL, &p1Rect);
+			SDL_RenderCopy(renderer, p2Tx, NULL, &p2Rect);
 		}
-
-		SDL_SetRenderDrawColor(renderer, 102, 0, 153, 255);
-		SDL_RenderFillRect(renderer, &pushR1);
-
-		SDL_SetRenderDrawColor(renderer, 102, 0, 153, 255);
-		SDL_RenderFillRect(renderer, &pushR2);
-
-		SDL_RenderFillRect(renderer, &objectiveR);
-
-		SDL_RenderCopy(renderer, characterTx, NULL, &p1Rect);
-		SDL_RenderCopy(renderer, characterTx, NULL, &p2Rect);
 
 		SDL_RenderPresent(renderer);
 	}
@@ -301,8 +415,11 @@ int main(int argc, char* argv[])
 	Mix_FreeMusic(music);
 	Mix_CloseAudio();
 	Mix_Quit();
-	SDL_DestroyTexture(characterTx);
+	SDL_DestroyTexture(p1Tx);
+	SDL_DestroyTexture(p2Tx);
 	SDL_DestroyTexture(backgroundTx);
+	SDL_DestroyTexture(winTx);
+	SDL_DestroyTexture(loseTx);
 	IMG_Quit();
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
