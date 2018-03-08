@@ -65,7 +65,7 @@ void Inicialization()
 	SDL_Init(SDL_INIT_VIDEO);
 	window = SDL_CreateWindow("Let the hunger games begin", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWitdh, screenHeight, 0);
 	//Window error (sortir del joc)
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	IMG_Init(IMG_INIT_PNG);
 	p1Tx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Character1.png"));
@@ -86,18 +86,18 @@ void Inicialization()
 	p2Rect.y = screenHeight / 2 - characterHeight / 2;
 	p2Rect.w = characterWitdh;
 	p2Rect.h = characterHeight;
-	pushR1.w = 50;
-	pushR1.h = 50;
+	pushR1.w = 70;
+	pushR1.h = 70;
 	pushR1.x = (p1Rect.x + p1Rect.h / 2) - (pushR1.h / 2);
 	pushR1.y = (p1Rect.y + p1Rect.w / 2) - (pushR1.w / 2);
-	pushR2.w = 50;
-	pushR2.h = 50;
+	pushR2.w = 70;
+	pushR2.h = 70;
 	pushR2.x = (p2Rect.x + p2Rect.h / 2) - (pushR2.h / 2);
 	pushR2.y = (p2Rect.y + p2Rect.w / 2) - (pushR2.w / 2);
-	objectiveR.x = 100;
-	objectiveR.y = 100;
-	objectiveR.w = 75;
-	objectiveR.h = 75;
+	objectiveR.w = 314;
+	objectiveR.h = 203;
+	objectiveR.x = rand()% (screenWitdh - objectiveR.w);
+	objectiveR.y = rand() % (screenHeight - objectiveR.h);
 	p1Screen.x = 0;
 	p1Screen.y = 0;
 	p1Screen.w = screenWitdh / 2;
@@ -407,17 +407,53 @@ void Game()
 	{
 		p2Rect.y = 0 + p2Rect.h / 2;
 	}
+	//Reduce objective size
+	if(timeFinished == true)
+	{
+		if (objectiveR.w > (p1Rect.w + p2Rect.w))
+		{
+			objectiveR.w -= 31;//31 = 10% of the sprite size
+			objectiveR.h -= 20;//20 = 10% of the sprite size
+		}
+	}
 
 	//Render
-	//- Normal sprites
 	//--Background
 	SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
 	//--Objective
 	SDL_RenderCopy(renderer, objectiveTx, NULL, &objectiveR);
 	//--Push indicator 1
-	SDL_RenderCopy(renderer, push1Tx, NULL, &pushR1);
+	switch (pushR1Pos)
+	{
+	case 1:
+		SDL_RenderCopyEx(renderer, push1Tx, NULL, &pushR1, 0, NULL, SDL_FLIP_NONE);
+		break;
+	case 2:
+		SDL_RenderCopyEx(renderer, push1Tx, NULL, &pushR1, 270, NULL, SDL_FLIP_NONE);
+		break;
+	case 3:
+		SDL_RenderCopyEx(renderer, push1Tx, NULL, &pushR1, 180, NULL, SDL_FLIP_NONE);
+		break;
+	case 4:
+		SDL_RenderCopyEx(renderer, push1Tx, NULL, &pushR1, 90, NULL, SDL_FLIP_NONE);
+		break;
+	}
 	//--Push indicator 2
-	SDL_RenderCopy(renderer, push2Tx, NULL, &pushR2);
+	switch (pushR2Pos)
+	{
+	case 1:
+		SDL_RenderCopyEx(renderer, push2Tx, NULL, &pushR2, 0, NULL, SDL_FLIP_NONE);
+		break;
+	case 2:
+		SDL_RenderCopyEx(renderer, push2Tx, NULL, &pushR2, 270, NULL, SDL_FLIP_NONE);
+		break;
+	case 3:
+		SDL_RenderCopyEx(renderer, push2Tx, NULL, &pushR2, 180, NULL, SDL_FLIP_NONE);
+		break;
+	case 4:
+		SDL_RenderCopyEx(renderer, push2Tx, NULL, &pushR2, 90, NULL, SDL_FLIP_NONE);
+		break;
+	}
 	//--Character 1
 	SDL_RenderCopy(renderer, p1Tx, NULL, &p1Rect);
 	//--Character 2
@@ -437,10 +473,21 @@ void WinLoseScreen()
 			switch (event.key.keysym.sym)
 			{
 			case SDLK_RETURN:
+				//Reinicialize the variables
 				//- We change the position of the objective
 				objectiveR.x = rand() % (screenWitdh - objectiveR.w);
 				objectiveR.y = rand() % (screenHeight - objectiveR.h);
+				objectiveR.w = 314;
+				objectiveR.h = 203;
 				timeFinished = false;
+				pressingUp = false;
+				pressingLeft = false;
+				pressingDown = false;
+				pressingRight = false;
+				pressingW = false;
+				pressingA = false;
+				pressingS = false;
+				pressingD = false;
 				break;
 			case SDLK_ESCAPE:
 				playing = false;
@@ -501,7 +548,6 @@ void WinLoseScreen()
 
 void Quit()
 {
-	//Quit
 	Mix_FreeMusic(backgroundMusic);
 	Mix_CloseAudio();
 	Mix_Quit();
