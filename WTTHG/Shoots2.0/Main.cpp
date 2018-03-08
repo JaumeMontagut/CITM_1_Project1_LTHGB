@@ -11,7 +11,7 @@
 
 #define screenWitdh 1280
 #define screenHeight 720
-#define pushDist 10
+#define pushDist 30
 #define pushDistMultiplier 5
 //All image sizes are ajustaded automatically except for the background image
 
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	pressingA = false;
 	pressingS = false;
 	pressingD = false;
-	characterSpeed = 5;
+	characterSpeed = 6;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	window = SDL_CreateWindow("MyAwesomeGame", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWitdh, screenHeight, SDL_WINDOW_OPENGL);
@@ -122,12 +122,19 @@ int main(int argc, char* argv[])
 	{
 		while (SDL_PollEvent(&event) != 0)
 		{
-			if(event.type == SDL_KEYDOWN)
+			switch(event.type)
 			{
-				if(event.key.keysym.sym == SDLK_RETURN)
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym)
 				{
+				case SDLK_RETURN:
 					start = true;
+					break;
 				}
+				break;
+			case SDL_QUIT:
+				playing = false;
+				break;
 			}
 		}
 		SDL_RenderCopy(renderer, initialTx, NULL, NULL);
@@ -136,11 +143,14 @@ int main(int argc, char* argv[])
 
 	while (playing == true)
 	{
-		//Input
-		while (SDL_PollEvent(&event) != 0)
+		//Game
+		if(timeFinished == false)
 		{
-			switch(event.type)
+			//Input
+			while (SDL_PollEvent(&event) != 0)
 			{
+				switch (event.type)
+				{
 				case SDL_QUIT:
 					playing = false;
 					break;
@@ -181,7 +191,7 @@ int main(int argc, char* argv[])
 						break;
 					case SDLK_g:
 						//SFX
-						if((p2Rect.x + p2Rect.w) > pushR1.x && p2Rect.x < (pushR1.x + pushR1.w) && (p2Rect.y + p2Rect.h) > pushR1.y && p2Rect.y < (pushR1.y + pushR1.h))
+						if ((p2Rect.x + p2Rect.w) > pushR1.x && p2Rect.x < (pushR1.x + pushR1.w) && (p2Rect.y + p2Rect.h) > pushR1.y && p2Rect.y < (pushR1.y + pushR1.h))
 						{
 							pushP2 = true;
 						}
@@ -195,14 +205,8 @@ int main(int argc, char* argv[])
 						}
 						break;
 					case SDLK_RETURN:
-						if(timeFinished == false)
-						{
-							timeFinished = true;
-						}
-						else if(timeFinished = true)
-						{
-							timeFinished = false;
-						}
+						//Quan incorporem temps haurem de canviar aixo
+						timeFinished = true;
 						break;
 					}
 					break;
@@ -235,182 +239,223 @@ int main(int argc, char* argv[])
 						break;
 					}
 					break;
+				}
 			}
-		}
 
-		//Logic
-		//- Player 1
-		if (pressingW == true)
-		{
-			p1Rect.y -= characterSpeed;
-		}
-		if (pressingA == true)
-		{
-			p1Rect.x -= characterSpeed;
-		}
-		if (pressingS == true)
-		{
-			p1Rect.y += characterSpeed;
-		}
-		if (pressingD == true)
-		{
-			p1Rect.x += characterSpeed;
-		}
-		//- Player 2
-		if (pressingUp == true)
-		{
-			p2Rect.y -= characterSpeed;
-		}
-		if (pressingLeft == true)
-		{
-			p2Rect.x -= characterSpeed;
-		}
-		if (pressingDown == true)
-		{
-			p2Rect.y += characterSpeed;
-		}
-		if (pressingRight == true)
-		{
-			p2Rect.x += characterSpeed;
-		}
-		//- Push rectangle 1 position
-		switch(pushR1Pos)
-		{
-		case 0:
-			pushR1.x = (p1Rect.x + p1Rect.h / 2) - (pushR1.h / 2);
-			pushR1.y = (p1Rect.y + p1Rect.w / 2) - (pushR1.w / 2);
-			break;
-		case 1:
-			pushR1.y = p1Rect.y - pushR1.h;
-			pushR1.x = p1Rect.x;
-			break;
-		case 2:
-			pushR1.x = p1Rect.x - pushR1.w;
-			pushR1.y = p1Rect.y;
-			break;
-		case 3:
-			pushR1.y = p1Rect.y + p1Rect.h;
-			pushR1.x = p1Rect.x;
-			break;
-		case 4:
-			pushR1.x = p1Rect.x + p1Rect.w;
-			pushR1.y = p1Rect.y;
-			break;
-		}
-		//- Push rectangle 2 position
-		switch (pushR2Pos)
-		{
-		case 0:
-			pushR2.x = (p2Rect.x + p2Rect.h / 2) - (pushR2.h / 2);
-			pushR2.y = (p2Rect.y + p2Rect.w / 2) - (pushR2.w / 2);
-			break;
-		case 1:
-			pushR2.y = p2Rect.y - pushR2.h;
-			pushR2.x = p2Rect.x;
-			break;
-		case 2:
-			pushR2.x = p2Rect.x - pushR2.w;
-			pushR2.y = p2Rect.y;
-			break;
-		case 3:
-			pushR2.y = p2Rect.y + p2Rect.h;
-			pushR2.x = p2Rect.x;
-			break;
-		case 4:
-			pushR2.x = p2Rect.x + p2Rect.w;
-			pushR2.y = p2Rect.y;
-			break;
-		}
-		//- Push rectangle 1 action
-		if(pushP2 == true)
-		{
+			//Logic
+			//- Player 1
+			if (pressingW == true)
+			{
+				p1Rect.y -= characterSpeed;
+			}
+			if (pressingA == true)
+			{
+				p1Rect.x -= characterSpeed;
+			}
+			if (pressingS == true)
+			{
+				p1Rect.y += characterSpeed;
+			}
+			if (pressingD == true)
+			{
+				p1Rect.x += characterSpeed;
+			}
+			//- Player 2
+			if (pressingUp == true)
+			{
+				p2Rect.y -= characterSpeed;
+			}
+			if (pressingLeft == true)
+			{
+				p2Rect.x -= characterSpeed;
+			}
+			if (pressingDown == true)
+			{
+				p2Rect.y += characterSpeed;
+			}
+			if (pressingRight == true)
+			{
+				p2Rect.x += characterSpeed;
+			}
+			//- Push rectangle 1 position
 			switch (pushR1Pos)
 			{
+			case 0:
+				pushR1.x = (p1Rect.x + p1Rect.h / 2) - (pushR1.h / 2);
+				pushR1.y = (p1Rect.y + p1Rect.w / 2) - (pushR1.w / 2);
+				break;
 			case 1:
-				p2Rect.y -= pushDist;
+				pushR1.y = p1Rect.y - pushR1.h;
+				pushR1.x = p1Rect.x;
 				break;
 			case 2:
-				p2Rect.x -= pushDist;
+				pushR1.x = p1Rect.x - pushR1.w;
+				pushR1.y = p1Rect.y;
 				break;
 			case 3:
-				p2Rect.y += pushDist;
+				pushR1.y = p1Rect.y + p1Rect.h;
+				pushR1.x = p1Rect.x;
 				break;
 			case 4:
-				p2Rect.x += pushDist;
+				pushR1.x = p1Rect.x + p1Rect.w;
+				pushR1.y = p1Rect.y;
 				break;
 			}
-			if (pushR1Counter == pushDistMultiplier)
-			{
-				pushP2 = false;
-				pushR1Counter = 0;
-			}
-			pushR1Counter++;
-		}
-		//- Push rectangle 2 action
-		if (pushP1 == true)
-		{
+			//- Push rectangle 2 position
 			switch (pushR2Pos)
 			{
+			case 0:
+				pushR2.x = (p2Rect.x + p2Rect.h / 2) - (pushR2.h / 2);
+				pushR2.y = (p2Rect.y + p2Rect.w / 2) - (pushR2.w / 2);
+				break;
 			case 1:
-				p1Rect.y -= pushDist;
+				pushR2.y = p2Rect.y - pushR2.h;
+				pushR2.x = p2Rect.x;
 				break;
 			case 2:
-				p1Rect.x -= pushDist;
+				pushR2.x = p2Rect.x - pushR2.w;
+				pushR2.y = p2Rect.y;
 				break;
 			case 3:
-				p1Rect.y += pushDist;
+				pushR2.y = p2Rect.y + p2Rect.h;
+				pushR2.x = p2Rect.x;
 				break;
 			case 4:
-				p1Rect.x += pushDist;
+				pushR2.x = p2Rect.x + p2Rect.w;
+				pushR2.y = p2Rect.y;
 				break;
 			}
-			if (pushR2Counter == pushDistMultiplier)
+			//- Push rectangle 1 action
+			if (pushP2 == true)
 			{
-				pushP1 = false;
-				pushR2Counter = 0;
+				switch (pushR1Pos)
+				{
+				case 1:
+					p2Rect.y -= pushDist;
+					break;
+				case 2:
+					p2Rect.x -= pushDist;
+					break;
+				case 3:
+					p2Rect.y += pushDist;
+					break;
+				case 4:
+					p2Rect.x += pushDist;
+					break;
+				}
+				if (pushR1Counter == pushDistMultiplier)
+				{
+					pushP2 = false;
+					pushR1Counter = 0;
+				}
+				pushR1Counter++;
 			}
-			pushR2Counter++;
-		}
-		//Player 1 limits
-		if (p1Rect.y < 0)
-		{
-			p1Rect.y = 0;
-		}
-		if (p1Rect.x < 0)
-		{
-			p1Rect.x = characterSpeed;
-		}
-		if (p1Rect.y > screenHeight - characterHeight)
-		{
-			p1Rect.y = screenHeight - characterHeight;
-		}
-		if (p1Rect.x > screenWitdh - characterWitdh)
-		{
-			p1Rect.x = screenWitdh - characterWitdh;
-		}
-		//Player 2 limits
-		if (p2Rect.y < 0)
-		{
-			p2Rect.y = 0;
-		}
-		if (p2Rect.x < 0)
-		{
-			p2Rect.x = characterSpeed;
-		}
-		if (p2Rect.y > screenHeight - characterHeight)
-		{
-			p2Rect.y = screenHeight - characterHeight;
-		}
-		if (p2Rect.x > screenWitdh - characterWitdh)
-		{
-			p2Rect.x = screenWitdh - characterWitdh;
-		}
+			//- Push rectangle 2 action
+			if (pushP1 == true)
+			{
+				switch (pushR2Pos)
+				{
+				case 1:
+					p1Rect.y -= pushDist;
+					break;
+				case 2:
+					p1Rect.x -= pushDist;
+					break;
+				case 3:
+					p1Rect.y += pushDist;
+					break;
+				case 4:
+					p1Rect.x += pushDist;
+					break;
+				}
+				if (pushR2Counter == pushDistMultiplier)
+				{
+					pushP1 = false;
+					pushR2Counter = 0;
+				}
+				pushR2Counter++;
+			}
+			//Player 1 limits
+			if (p1Rect.y < 0)
+			{
+				p1Rect.y = 0;
+			}
+			if (p1Rect.x < 0)
+			{
+				p1Rect.x = characterSpeed;
+			}
+			if (p1Rect.y > screenHeight - characterHeight)
+			{
+				p1Rect.y = screenHeight - characterHeight;
+			}
+			if (p1Rect.x > screenWitdh - characterWitdh)
+			{
+				p1Rect.x = screenWitdh - characterWitdh;
+			}
+			//Player 2 limits
+			if (p2Rect.y < 0)
+			{
+				p2Rect.y = 0;
+			}
+			if (p2Rect.x < 0)
+			{
+				p2Rect.x = characterSpeed;
+			}
+			if (p2Rect.y > screenHeight - characterHeight)
+			{
+				p2Rect.y = screenHeight - characterHeight;
+			}
+			if (p2Rect.x > screenWitdh - characterWitdh)
+			{
+				p2Rect.x = screenWitdh - characterWitdh;
+			}
 
-		//Render
-		//- Time finish
-		if (timeFinished == true)
+			//Render
+				//- Normal sprites
+				//--Background
+				SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
+				//--Objective
+				SDL_RenderCopy(renderer, objectiveTx, NULL, &objectiveR);
+				//--Push indicator 1
+				SDL_RenderCopy(renderer, push1Tx, NULL, &pushR1);
+				//--Push indicator 2
+				SDL_RenderCopy(renderer, push2Tx, NULL, &pushR2);
+				//--Character 1
+				SDL_RenderCopy(renderer, p1Tx, NULL, &p1Rect);
+				//--Character 2
+				SDL_RenderCopy(renderer, p2Tx, NULL, &p2Rect);
+
+			SDL_RenderPresent(renderer);
+		}
+		//Death / Win screen
+		else
 		{
-			//--Player 1 is on the objective
+			//Input
+			while (SDL_PollEvent(&event) != 0)
+			{
+				switch (event.type)
+				{
+				case SDL_KEYDOWN:
+					switch (event.key.keysym.sym)
+					{
+					case SDLK_RETURN:
+						//- We change the position of the objective
+						objectiveR.x = rand() % (screenWitdh - objectiveR.w);
+						objectiveR.y = rand() % (screenHeight - objectiveR.h);
+						timeFinished = false;
+						break;
+					case SDLK_ESCAPE:
+						playing = false;
+					}
+					break;
+				case SDL_QUIT:
+					playing = false;
+					break;
+				}
+			}
+
+			//Rendering
+			//-Player 1 is on the objective
 			if ((p1Rect.x + p1Rect.w) > objectiveR.x && p1Rect.x < (objectiveR.x + objectiveR.w) && (p1Rect.y + p1Rect.h) > objectiveR.y && p1Rect.y < (objectiveR.y + objectiveR.h))
 			{
 				p1IsIn = true;
@@ -419,8 +464,8 @@ int main(int argc, char* argv[])
 			{
 				p1IsIn = false;
 			}
-			//--Player 2 is on the objective
-			if((p2Rect.x + p2Rect.w) > objectiveR.x && p2Rect.x < (objectiveR.x + objectiveR.w) && (p2Rect.y + p2Rect.h) > objectiveR.y && p2Rect.y < (objectiveR.y + objectiveR.h))
+			//-Player 2 is on the objective
+			if ((p2Rect.x + p2Rect.w) > objectiveR.x && p2Rect.x < (objectiveR.x + objectiveR.w) && (p2Rect.y + p2Rect.h) > objectiveR.y && p2Rect.y < (objectiveR.y + objectiveR.h))
 			{
 				p2IsIn = true;
 			}
@@ -428,10 +473,12 @@ int main(int argc, char* argv[])
 			{
 				p2IsIn = false;
 			}
-
 			//--Print
 			if (p1IsIn == true && p2IsIn == true)
 			{
+				objectiveR.x = rand() % (screenWitdh - objectiveR.w);
+				objectiveR.y = rand() % (screenHeight - objectiveR.h);
+				timeFinished = false;
 				//PauseBackgroundMusic
 				//Mix_PlayMusic(backgroundMusic, -1);//Cambiar canal si no funciona
 				//Continue normally
@@ -440,42 +487,19 @@ int main(int argc, char* argv[])
 			{
 				SDL_RenderCopy(renderer, winTx, NULL, &p1Screen);
 				SDL_RenderCopy(renderer, loseTx, NULL, &p2Screen);
-				//Pausar joc
 			}
 			else if (p1IsIn == false && p2IsIn == true)
 			{
 				SDL_RenderCopy(renderer, loseTx, NULL, &p1Screen);
 				SDL_RenderCopy(renderer, winTx, NULL, &p2Screen);
-				//Pausar joc
 			}
 			else if (p1IsIn == false && p2IsIn == false)
 			{
 				SDL_RenderCopy(renderer, loseTx, NULL, &p1Screen);
 				SDL_RenderCopy(renderer, loseTx, NULL, &p2Screen);
-				//Pausar joc
 			}
-			//-- We change the position of the objective
-			//objectiveR.x = rand()% (screenWitdh - objectiveR.w);
-			//objectiveR.y = rand()% (screenHeight - objectiveR.h);
+			SDL_RenderPresent(renderer);
 		}
-		else
-		{
-			//- Normal sprites
-			//--Background
-			SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
-			//--Objective
-			SDL_RenderCopy(renderer, objectiveTx, NULL, &objectiveR);
-			//--Push indicator 1
-			SDL_RenderCopy(renderer, push1Tx, NULL, &pushR1);
-			//--Push indicator 2
-			SDL_RenderCopy(renderer, push2Tx, NULL, &pushR2);
-			//--Character 1
-			SDL_RenderCopy(renderer, p1Tx, NULL, &p1Rect);
-			//--Character 2
-			SDL_RenderCopy(renderer, p2Tx, NULL, &p2Rect);
-		}
-
-		SDL_RenderPresent(renderer);
 	}
 
 	//Quit
