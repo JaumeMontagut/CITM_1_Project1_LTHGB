@@ -2,11 +2,12 @@
 #include "SDL\include\SDL_image.h"
 #include "SDL\include\SDL_mixer.h"
 #include <time.h>//To calculate the random positions
+#include <iostream>//To calculate the random positionss
 
 #pragma comment (lib,"SDL/x86/SDL2.lib")
 #pragma comment (lib,"SDL/x86/SDL2main.lib")
 #pragma comment (lib,"SDL/x86/SDL2_image.lib")
-#pragma comment (lib, "SDL/x86/SDL2_mixer.lib")
+#pragma comment (lib,"SDL/x86/SDL2_mixer.lib")
 
 #define screenWitdh 1280
 #define screenHeight 720
@@ -22,6 +23,7 @@ int main(int argc, char* argv[])
 	bool pushP2 = false, pushP1 = false;
 	bool timeFinished = false;
 	bool p1IsIn = false, p2IsIn = false;
+	bool start = false;
 	int characterWitdh = 0, characterHeight = 0;
 	int characterSpeed;
 	int pushR1Pos = 0;//1 = up, 2 = left, 3 = down, 4 = right
@@ -30,19 +32,24 @@ int main(int argc, char* argv[])
 	SDL_Window * window = nullptr;
 	SDL_Renderer* renderer = nullptr;;
 	SDL_Event event;
-	SDL_Texture * p1Tx = nullptr;
-	SDL_Texture * p2Tx = nullptr;
-	SDL_Texture * backgroundTx = nullptr;
-	SDL_Texture * winTx = nullptr;
-	SDL_Texture * loseTx = nullptr;
 	SDL_Rect p1Rect;
 	SDL_Rect p2Rect;
 	SDL_Rect pushR1;
 	SDL_Rect pushR2;
 	SDL_Rect p1Screen;
 	SDL_Rect p2Screen;
-	Mix_Music * music = nullptr;
 	SDL_Rect objectiveR;
+	SDL_Texture * p1Tx = nullptr;
+	SDL_Texture * p2Tx = nullptr;
+	SDL_Texture * backgroundTx = nullptr;
+	SDL_Texture * winTx = nullptr;
+	SDL_Texture * loseTx = nullptr;
+	SDL_Texture * objectiveTx = nullptr;
+	SDL_Texture * push1Tx = nullptr;
+	SDL_Texture * push2Tx = nullptr;
+	SDL_Texture * initialTx = nullptr;
+	Mix_Music * backgroundMusic = nullptr;
+	Mix_Music * winMusic = nullptr;
 
 	//Inicialization (inicialitzacio bona (valors que farem servir), no aquella que ha de servir de valor buit per a les variables que encara no hem calculat)
 	playing = true;
@@ -67,6 +74,10 @@ int main(int argc, char* argv[])
 	backgroundTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Background.png"));
 	winTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Win.png"));
 	loseTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Lose.png"));
+	objectiveTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Objective.png"));
+	push1Tx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Push1.png"));
+	push2Tx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Push2.png"));
+	initialTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Initial.png"));
 	SDL_QueryTexture(p1Tx, nullptr, nullptr, &characterWitdh, &characterHeight);//Els dos personatges haurien de tenir la mateixa mida, de manera que no caldria repetir aixo dos cops
 	p1Rect.x = screenWitdh / 2 - characterWitdh / 2;
 	p1Rect.y = screenHeight / 2 - characterHeight / 2;
@@ -96,12 +107,32 @@ int main(int argc, char* argv[])
 	p2Screen.y = 0;
 	p2Screen.w = screenWitdh / 2;
 	p2Screen.h = screenHeight;
+	srand(time(NULL));
 
 	Mix_Init(MIX_INIT_OGG);
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-	music = Mix_LoadMUS("Assets/music.ogg");
-	Mix_PlayMusic(music, -1);
+	backgroundMusic = Mix_LoadMUS("Assets/BackgroundMusic.ogg");
+	winMusic = Mix_LoadMUS("Assets/WinMusic.ogg");
+	Mix_PlayMusic(backgroundMusic, -1);
 
+
+	//Initial screen
+	//Missatge: press enter to continue
+	while (start == false)
+	{
+		while (SDL_PollEvent(&event) != 0)
+		{
+			if(event.type == SDL_KEYDOWN)
+			{
+				if(event.key.keysym.sym == SDLK_RETURN)
+				{
+					start = true;
+				}
+			}
+		}
+		SDL_RenderCopy(renderer, initialTx, NULL, NULL);
+		SDL_RenderPresent(renderer);
+	}
 
 	while (playing == true)
 	{
@@ -163,7 +194,7 @@ int main(int argc, char* argv[])
 							pushP1 = true;
 						}
 						break;
-					case SDLK_KP_ENTER:
+					case SDLK_RETURN:
 						if(timeFinished == false)
 						{
 							timeFinished = true;
@@ -172,7 +203,6 @@ int main(int argc, char* argv[])
 						{
 							timeFinished = false;
 						}
-						
 						break;
 					}
 					break;
@@ -210,36 +240,36 @@ int main(int argc, char* argv[])
 
 		//Logic
 		//- Player 1
-		if (pressingW == true && p1Rect.y > 0)
+		if (pressingW == true)
 		{
 			p1Rect.y -= characterSpeed;
 		}
-		if (pressingA == true && p1Rect.x > 0)
+		if (pressingA == true)
 		{
 			p1Rect.x -= characterSpeed;
 		}
-		if (pressingS == true && p1Rect.y < screenHeight - characterHeight)
+		if (pressingS == true)
 		{
 			p1Rect.y += characterSpeed;
 		}
-		if (pressingD == true && p1Rect.x < screenWitdh - characterWitdh)
+		if (pressingD == true)
 		{
 			p1Rect.x += characterSpeed;
 		}
 		//- Player 2
-		if (pressingUp == true && p2Rect.y > 0)
+		if (pressingUp == true)
 		{
 			p2Rect.y -= characterSpeed;
 		}
-		if (pressingLeft == true && p2Rect.x > 0)
+		if (pressingLeft == true)
 		{
 			p2Rect.x -= characterSpeed;
 		}
-		if (pressingDown == true && p2Rect.y < screenHeight - characterHeight)
+		if (pressingDown == true)
 		{
 			p2Rect.y += characterSpeed;
 		}
-		if (pressingRight == true && p2Rect.x < screenWitdh - characterWitdh)
+		if (pressingRight == true)
 		{
 			p2Rect.x += characterSpeed;
 		}
@@ -341,25 +371,69 @@ int main(int argc, char* argv[])
 			}
 			pushR2Counter++;
 		}
+		//Player 1 limits
+		if (p1Rect.y < 0)
+		{
+			p1Rect.y = 0;
+		}
+		if (p1Rect.x < 0)
+		{
+			p1Rect.x = characterSpeed;
+		}
+		if (p1Rect.y > screenHeight - characterHeight)
+		{
+			p1Rect.y = screenHeight - characterHeight;
+		}
+		if (p1Rect.x > screenWitdh - characterWitdh)
+		{
+			p1Rect.x = screenWitdh - characterWitdh;
+		}
+		//Player 2 limits
+		if (p2Rect.y < 0)
+		{
+			p2Rect.y = 0;
+		}
+		if (p2Rect.x < 0)
+		{
+			p2Rect.x = characterSpeed;
+		}
+		if (p2Rect.y > screenHeight - characterHeight)
+		{
+			p2Rect.y = screenHeight - characterHeight;
+		}
+		if (p2Rect.x > screenWitdh - characterWitdh)
+		{
+			p2Rect.x = screenWitdh - characterWitdh;
+		}
 
 		//Render
 		//- Time finish
 		if (timeFinished == true)
 		{
-			p1IsIn = 0;
-			p2IsIn = 0;
-			//Player 1 is on the objective
+			//--Player 1 is on the objective
 			if ((p1Rect.x + p1Rect.w) > objectiveR.x && p1Rect.x < (objectiveR.x + objectiveR.w) && (p1Rect.y + p1Rect.h) > objectiveR.y && p1Rect.y < (objectiveR.y + objectiveR.h))
 			{
 				p1IsIn = true;
 			}
+			else
+			{
+				p1IsIn = false;
+			}
+			//--Player 2 is on the objective
 			if((p2Rect.x + p2Rect.w) > objectiveR.x && p2Rect.x < (objectiveR.x + objectiveR.w) && (p2Rect.y + p2Rect.h) > objectiveR.y && p2Rect.y < (objectiveR.y + objectiveR.h))
 			{
 				p2IsIn = true;
 			}
+			else
+			{
+				p2IsIn = false;
+			}
 
+			//--Print
 			if (p1IsIn == true && p2IsIn == true)
 			{
+				//PauseBackgroundMusic
+				//Mix_PlayMusic(backgroundMusic, -1);//Cambiar canal si no funciona
 				//Continue normally
 			}
 			else if (p1IsIn == true && p2IsIn == false)
@@ -380,31 +454,24 @@ int main(int argc, char* argv[])
 				SDL_RenderCopy(renderer, loseTx, NULL, &p2Screen);
 				//Pausar joc
 			}
-			//cambiar la posicio del rectangle
-			//timeFinished = false;
+			//-- We change the position of the objective
+			//objectiveR.x = rand()% (screenWitdh - objectiveR.w);
+			//objectiveR.y = rand()% (screenHeight - objectiveR.h);
 		}
 		else
 		{
 			//- Normal sprites
+			//--Background
 			SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
-
-			if (timeFinished == true)
-			{
-				SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-			}
-			else
-			{
-				SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-			}
-			SDL_RenderFillRect(renderer, &objectiveR);
-
-			SDL_SetRenderDrawColor(renderer, 102, 0, 153, 255);
-			SDL_RenderFillRect(renderer, &pushR1);
-
-			SDL_SetRenderDrawColor(renderer, 102, 0, 153, 255);
-			SDL_RenderFillRect(renderer, &pushR2);
-
+			//--Objective
+			SDL_RenderCopy(renderer, objectiveTx, NULL, &objectiveR);
+			//--Push indicator 1
+			SDL_RenderCopy(renderer, push1Tx, NULL, &pushR1);
+			//--Push indicator 2
+			SDL_RenderCopy(renderer, push2Tx, NULL, &pushR2);
+			//--Character 1
 			SDL_RenderCopy(renderer, p1Tx, NULL, &p1Rect);
+			//--Character 2
 			SDL_RenderCopy(renderer, p2Tx, NULL, &p2Rect);
 		}
 
@@ -412,7 +479,7 @@ int main(int argc, char* argv[])
 	}
 
 	//Quit
-	Mix_FreeMusic(music);
+	Mix_FreeMusic(backgroundMusic);
 	Mix_CloseAudio();
 	Mix_Quit();
 	SDL_DestroyTexture(p1Tx);
@@ -420,6 +487,10 @@ int main(int argc, char* argv[])
 	SDL_DestroyTexture(backgroundTx);
 	SDL_DestroyTexture(winTx);
 	SDL_DestroyTexture(loseTx);
+	SDL_DestroyTexture(objectiveTx);
+	SDL_DestroyTexture(push1Tx);
+	SDL_DestroyTexture(push2Tx);
+	SDL_DestroyTexture(initialTx);
 	IMG_Quit();
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
