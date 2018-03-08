@@ -373,40 +373,40 @@ void Game()
 		}
 		pushR2Counter++;
 	}
-	////Player 1 limits
-	//if (p1Rect.y < 0)
-	//{
-	//	p1Rect.y = 0;
-	//}
-	//if (p1Rect.x < 0)
-	//{
-	//	p1Rect.x = characterSpeed;
-	//}
-	//if (p1Rect.y > screenHeight - characterHeight)
-	//{
-	//	p1Rect.y = screenHeight - characterHeight;
-	//}
-	//if (p1Rect.x > screenWitdh - characterWitdh)
-	//{
-	//	p1Rect.x = screenWitdh - characterWitdh;
-	//}
-	////Player 2 limits
-	//if (p2Rect.y < 0)
-	//{
-	//	p2Rect.y = 0;
-	//}
-	//if (p2Rect.x < 0)
-	//{
-	//	p2Rect.x = characterSpeed;
-	//}
-	//if (p2Rect.y > screenHeight - characterHeight)
-	//{
-	//	p2Rect.y = screenHeight - characterHeight;
-	//}
-	//if (p2Rect.x > screenWitdh - characterWitdh)
-	//{
-	//	p2Rect.x = screenWitdh - characterWitdh;
-	//}
+	//Player 1 screen edges
+	if(p1Rect.x + p1Rect.w/2 < 0)
+	{
+		p1Rect.x = screenWitdh - p1Rect.w/2;
+	}
+	if (p1Rect.x + p1Rect.w / 2 > screenWitdh)
+	{
+		p1Rect.x = 0 + p1Rect.w / 2;
+	}
+	if (p1Rect.y + p1Rect.h / 2 < 0)
+	{
+		p1Rect.y = screenHeight - p1Rect.h / 2;
+	}
+	if (p1Rect.y + p1Rect.h / 2 > screenHeight)
+	{
+		p1Rect.y = 0 + p1Rect.h / 2;
+	}
+	//Player 2 screen edges
+	if (p2Rect.x + p2Rect.w / 2 < 0)
+	{
+		p2Rect.x = screenWitdh - p2Rect.w / 2;
+	}
+	if (p2Rect.x + p2Rect.w / 2 > screenWitdh)
+	{
+		p2Rect.x = 0 + p2Rect.w / 2;
+	}
+	if (p2Rect.y + p2Rect.h / 2 < 0)
+	{
+		p2Rect.y = screenHeight - p2Rect.h / 2;
+	}
+	if (p2Rect.y + p2Rect.h / 2 > screenHeight)
+	{
+		p2Rect.y = 0 + p2Rect.h / 2;
+	}
 
 	//Render
 	//- Normal sprites
