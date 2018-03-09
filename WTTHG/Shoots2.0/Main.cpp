@@ -1,8 +1,9 @@
 #include "SDL\include\SDL.h"
 #include "SDL\include\SDL_image.h"
 #include "SDL\include\SDL_mixer.h"
+
 #include <time.h>//To calculate the random positions
-#include <iostream>//To calculate the random positionss
+#include <iostream>//To calculate the random positions
 
 #pragma comment (lib,"SDL/x86/SDL2.lib")
 #pragma comment (lib,"SDL/x86/SDL2main.lib")
@@ -13,6 +14,7 @@
 #define screenHeight 720
 #define pushDist 26
 #define pushDistMultiplier 5
+#define initialTime 7000
 //All image sizes are ajustaded automatically except for the background image
 
 //Declaration
@@ -27,6 +29,8 @@ int characterSpeed;
 int pushR1Pos = 0;//1 = up, 2 = left, 3 = down, 4 = right
 int pushR2Pos = 0;
 int pushR1Counter = 0, pushR2Counter = 0;
+long int timer = 0;
+long int maxTime;
 SDL_Window * window = nullptr;
 SDL_Renderer* renderer = nullptr;;
 SDL_Event event;
@@ -37,6 +41,7 @@ SDL_Rect pushR2;
 SDL_Rect p1Screen;
 SDL_Rect p2Screen;
 SDL_Rect objectiveR;
+SDL_Rect continueR;
 SDL_Texture * p1Tx = nullptr;
 SDL_Texture * p2Tx = nullptr;
 SDL_Texture * backgroundTx = nullptr;
@@ -46,11 +51,16 @@ SDL_Texture * objectiveTx = nullptr;
 SDL_Texture * push1Tx = nullptr;
 SDL_Texture * push2Tx = nullptr;
 SDL_Texture * initialTx = nullptr;
+SDL_Texture * continueTx = nullptr;
 Mix_Music * backgroundMusic = nullptr;
-Mix_Music * winMusic = nullptr;
+Mix_Chunk * almostTimeSFX = nullptr;
+Mix_Chunk * timeSFX = nullptr;
+Mix_Chunk * pushSFX = nullptr;
+Mix_Chunk * winSFX = nullptr;
 
 void Inicialization()
 {
+	
 	playing = true;
 	pressingUp = false;
 	pressingLeft = false;
@@ -61,10 +71,10 @@ void Inicialization()
 	pressingS = false;
 	pressingD = false;
 	characterSpeed = 6;
+	maxTime = initialTime;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	window = SDL_CreateWindow("Let the hunger games begin", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWitdh, screenHeight, 0);
-	//Window error (sortir del joc)
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	IMG_Init(IMG_INIT_PNG);
@@ -77,7 +87,8 @@ void Inicialization()
 	push1Tx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Push1.png"));
 	push2Tx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Push2.png"));
 	initialTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/Initial.png"));
-	SDL_QueryTexture(p1Tx, nullptr, nullptr, &characterWitdh, &characterHeight);//Els dos personatges haurien de tenir la mateixa mida, de manera que no caldria repetir aixo dos cops
+	continueTx = SDL_CreateTextureFromSurface(renderer, IMG_Load("Assets/ContinueMessage.png"));
+	SDL_QueryTexture(p1Tx, nullptr, nullptr, &characterWitdh, &characterHeight);
 	p1Rect.x = screenWitdh / 2 - characterWitdh / 2;
 	p1Rect.y = screenHeight / 2 - characterHeight / 2;
 	p1Rect.w = characterWitdh;
@@ -94,8 +105,8 @@ void Inicialization()
 	pushR2.h = 70;
 	pushR2.x = (p2Rect.x + p2Rect.h / 2) - (pushR2.h / 2);
 	pushR2.y = (p2Rect.y + p2Rect.w / 2) - (pushR2.w / 2);
-	objectiveR.w = 314;
-	objectiveR.h = 203;
+	objectiveR.w = 470;
+	objectiveR.h = 303;
 	objectiveR.x = rand()% (screenWitdh - objectiveR.w);
 	objectiveR.y = rand() % (screenHeight - objectiveR.h);
 	p1Screen.x = 0;
@@ -106,18 +117,24 @@ void Inicialization()
 	p2Screen.y = 0;
 	p2Screen.w = screenWitdh / 2;
 	p2Screen.h = screenHeight;
+	continueR.w = 342;
+	continueR.h = 43;
+	continueR.x = screenWitdh / 2 - continueR.w / 2;
+	continueR.y = screenHeight - continueR.h - 25;
 	srand(time(NULL));
 
 	Mix_Init(MIX_INIT_OGG);
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
 	backgroundMusic = Mix_LoadMUS("Assets/BackgroundMusic.ogg");
-	winMusic = Mix_LoadMUS("Assets/WinMusic.ogg");
+	almostTimeSFX = Mix_LoadWAV("Assets/AlmostTime.wav");
+	timeSFX = Mix_LoadWAV("Assets/Time.wav");
+	pushSFX = Mix_LoadWAV("Assets/Attack.wav");
+	winSFX = Mix_LoadWAV("Assets/Win.wav");
 	Mix_PlayMusic(backgroundMusic, -1);
 }
 
 void InitialScreen()
 {
-	//Missatge: press enter to continue
 	while (start == false)
 	{
 		while (SDL_PollEvent(&event) != 0)
@@ -133,6 +150,7 @@ void InitialScreen()
 				}
 				break;
 			case SDL_QUIT:
+				start = true;
 				playing = false;
 				break;
 			}
@@ -191,6 +209,7 @@ void Game()
 				//SFX
 				if ((p2Rect.x + p2Rect.w) > pushR1.x && p2Rect.x < (pushR1.x + pushR1.w) && (p2Rect.y + p2Rect.h) > pushR1.y && p2Rect.y < (pushR1.y + pushR1.h))
 				{
+					Mix_PlayChannel(-1, pushSFX, 0);
 					pushP2 = true;
 				}
 				break;
@@ -199,12 +218,9 @@ void Game()
 				//SFX
 				if ((p1Rect.x + p1Rect.w) > pushR2.x && p1Rect.x < (pushR2.x + pushR2.w) && (p1Rect.y + p1Rect.h) > pushR2.y && p1Rect.y < (pushR2.y + pushR2.h))
 				{
+					Mix_PlayChannel(-1, pushSFX, 0);
 					pushP1 = true;
 				}
-				break;
-			case SDLK_RETURN:
-				//Quan incorporem temps haurem de canviar aixo
-				timeFinished = true;
 				break;
 			}
 			break;
@@ -241,6 +257,23 @@ void Game()
 	}
 
 	//Logic
+	//- Timer
+	timer += 1000/60;
+	if (timer >= maxTime)
+	{
+		Mix_PlayChannel(-1, timeSFX, 0);
+		timeFinished = true;
+		timer = 0;
+		if (maxTime >= 5000)
+		{
+			maxTime -= 1000;
+		}
+	}
+	if(timer < (maxTime-3000) + 1000/60 && timer > (maxTime-3000) - 1000 / 60)
+	{
+		Mix_PlayChannel(-1, almostTimeSFX, 0);
+	}
+	SDL_Delay(1000 / 60);
 	//- Player 1
 	if (pressingW == true)
 	{
@@ -373,7 +406,7 @@ void Game()
 		}
 		pushR2Counter++;
 	}
-	//Player 1 screen edges
+	//- Player 1 screen edges
 	if(p1Rect.x + p1Rect.w/2 < 0)
 	{
 		p1Rect.x = screenWitdh - p1Rect.w/2;
@@ -390,7 +423,7 @@ void Game()
 	{
 		p1Rect.y = 0 + p1Rect.h / 2;
 	}
-	//Player 2 screen edges
+	//- Player 2 screen edges
 	if (p2Rect.x + p2Rect.w / 2 < 0)
 	{
 		p2Rect.x = screenWitdh - p2Rect.w / 2;
@@ -407,7 +440,7 @@ void Game()
 	{
 		p2Rect.y = 0 + p2Rect.h / 2;
 	}
-	//Reduce objective size
+	//- Reduce objective size
 	if(timeFinished == true)
 	{
 		if (objectiveR.w > (p1Rect.w + p2Rect.w))
@@ -418,11 +451,11 @@ void Game()
 	}
 
 	//Render
-	//--Background
+	//-Background
 	SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
-	//--Objective
+	//-Objective
 	SDL_RenderCopy(renderer, objectiveTx, NULL, &objectiveR);
-	//--Push indicator 1
+	//-Push indicator 1
 	switch (pushR1Pos)
 	{
 	case 1:
@@ -438,7 +471,7 @@ void Game()
 		SDL_RenderCopyEx(renderer, push1Tx, NULL, &pushR1, 90, NULL, SDL_FLIP_NONE);
 		break;
 	}
-	//--Push indicator 2
+	//-Push indicator 2
 	switch (pushR2Pos)
 	{
 	case 1:
@@ -454,9 +487,9 @@ void Game()
 		SDL_RenderCopyEx(renderer, push2Tx, NULL, &pushR2, 90, NULL, SDL_FLIP_NONE);
 		break;
 	}
-	//--Character 1
+	//-Character 1
 	SDL_RenderCopy(renderer, p1Tx, NULL, &p1Rect);
-	//--Character 2
+	//-Character 2
 	SDL_RenderCopy(renderer, p2Tx, NULL, &p2Rect);
 
 	SDL_RenderPresent(renderer);
@@ -473,12 +506,12 @@ void WinLoseScreen()
 			switch (event.key.keysym.sym)
 			{
 			case SDLK_RETURN:
-				//Reinicialize the variables
-				//- We change the position of the objective
+				//- Reinicialize the variables
+				//-- We change the position of the objective
 				objectiveR.x = rand() % (screenWitdh - objectiveR.w);
 				objectiveR.y = rand() % (screenHeight - objectiveR.h);
-				objectiveR.w = 314;
-				objectiveR.h = 203;
+				objectiveR.w = 470;
+				objectiveR.h = 303;
 				timeFinished = false;
 				pressingUp = false;
 				pressingLeft = false;
@@ -488,6 +521,7 @@ void WinLoseScreen()
 				pressingA = false;
 				pressingS = false;
 				pressingD = false;
+				maxTime = initialTime;
 				break;
 			case SDLK_ESCAPE:
 				playing = false;
@@ -518,15 +552,13 @@ void WinLoseScreen()
 	{
 		p2IsIn = false;
 	}
-	//--Print
+	//-Print
 	if (p1IsIn == true && p2IsIn == true)
 	{
 		objectiveR.x = rand() % (screenWitdh - objectiveR.w);
 		objectiveR.y = rand() % (screenHeight - objectiveR.h);
 		timeFinished = false;
-		//PauseBackgroundMusic
-		//Mix_PlayMusic(backgroundMusic, -1);//Cambiar canal si no funciona
-		//Continue normally
+		Mix_PlayChannel(-1, winSFX, 0);
 	}
 	else if (p1IsIn == true && p2IsIn == false)
 	{
@@ -543,12 +575,17 @@ void WinLoseScreen()
 		SDL_RenderCopy(renderer, loseTx, NULL, &p1Screen);
 		SDL_RenderCopy(renderer, loseTx, NULL, &p2Screen);
 	}
+	SDL_RenderCopy(renderer, continueTx, NULL, &continueR);
 	SDL_RenderPresent(renderer);
 }
 
 void Quit()
 {
 	Mix_FreeMusic(backgroundMusic);
+	Mix_FreeChunk(almostTimeSFX);
+	Mix_FreeChunk(timeSFX);
+	Mix_FreeChunk(pushSFX);
+	Mix_FreeChunk(winSFX);
 	Mix_CloseAudio();
 	Mix_Quit();
 	SDL_DestroyTexture(p1Tx);
@@ -560,6 +597,7 @@ void Quit()
 	SDL_DestroyTexture(push1Tx);
 	SDL_DestroyTexture(push2Tx);
 	SDL_DestroyTexture(initialTx);
+	SDL_DestroyTexture(continueTx);
 	IMG_Quit();
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
