@@ -30,60 +30,54 @@ public:
 	// INIT all modules
 	bool Init() 
 	{
-		bool ret = true;
 		for(int i = 0; i < NUM_MODULES; ++i)
 		{
 			if(modules[i]->Init() == false)
 			{
-				ret = false;
+				return false;
 			}
 		}
-		return ret;
+		return true;
 	}
 
 	// UPDATE all modules
 	update_status Update()
 	{
-		update_status ret = UPDATE_CONTINUE;
-
 		for (int i = 0; i < NUM_MODULES; i++)
 		{
 			if (modules[i]->PreUpdate() == UPDATE_STOP)
 			{
-				ret = UPDATE_STOP;
+				return UPDATE_STOP;
 			}
 		}
 		for(int i = 0; i < NUM_MODULES; i++)
 		{
 			if (modules[i]->Update() == UPDATE_STOP)
 			{
-				ret = UPDATE_STOP;
+				return UPDATE_STOP;
 			}
 		}
 		for (int i = 0; i < NUM_MODULES; i++)
 		{
 			if (modules[i]->PostUpdate() == UPDATE_STOP)
 			{
-				ret = UPDATE_STOP;
+				return UPDATE_STOP;
 			}
 		}
-
-		return ret;
+		return UPDATE_CONTINUE;
 	}
 
 	// EXIT Update 
 	bool CleanUp()
 	{
-		bool ret = true;
-
-		for(int i = NUM_MODULES; i > 0 && ret == true; i--)
+		for(int i = NUM_MODULES; i > 0; i--)
 		{
 			if (modules[i]->CleanUp() == false)
 			{
-				ret = false;
+				return false;
 			}
 		}
-		return ret;
+		return true;
 	}
 
 };
