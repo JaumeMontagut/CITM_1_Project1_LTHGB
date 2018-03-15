@@ -20,9 +20,6 @@ public:
 	{
 		modules[0] = new ModuleDummy();
 		modules[1] = new ModuleDummyESC();
-		// TODO 7: Create your new module "DummyESC"
-		// it should check if player it ESC key use kbhit()
-		// http://www.cprogramming.com/fod/kbhit.html
 	}
 
 	~Application()
@@ -33,55 +30,60 @@ public:
 	// INIT all modules
 	bool Init() 
 	{
+		bool ret = true;
 		for(int i = 0; i < NUM_MODULES; ++i)
 		{
 			if(modules[i]->Init() == false)
 			{
-				return false;
+				ret = false;
 			}
 		}
-		return true;
+		return ret;
 	}
 
 	// UPDATE all modules
 	update_status Update()
 	{
+		update_status ret = UPDATE_CONTINUE;
+
 		for (int i = 0; i < NUM_MODULES; i++)
 		{
 			if (modules[i]->PreUpdate() == UPDATE_STOP)
 			{
-				return UPDATE_STOP;
+				ret = UPDATE_STOP;
 			}
 		}
 		for(int i = 0; i < NUM_MODULES; i++)
 		{
 			if (modules[i]->Update() == UPDATE_STOP)
 			{
-				return UPDATE_STOP;
+				ret = UPDATE_STOP;
 			}
 		}
 		for (int i = 0; i < NUM_MODULES; i++)
 		{
 			if (modules[i]->PostUpdate() == UPDATE_STOP)
 			{
-				return UPDATE_STOP;
+				ret = UPDATE_STOP;
 			}
 		}
-		return update_status::UPDATE_CONTINUE;
+
+		return ret;
 	}
 
 	// EXIT Update 
 	bool CleanUp()
 	{
-		for(int i = NUM_MODULES; i > 0; i--)
+		bool ret = true;
+
+		for(int i = NUM_MODULES; i > 0 && ret == true; i--)
 		{
 			if (modules[i]->CleanUp() == false)
 			{
-				return false;
+				ret = false;
 			}
-			modules[i]->CleanUp();
 		}
-		return true;
+		return ret;
 	}
 
 };
