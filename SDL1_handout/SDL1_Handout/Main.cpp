@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 		case MAIN_UPDATE:
 		{
 			update_status status = App->Update();
-
+			
 			if (status == update_status::UPDATE_ERROR)
 			{
 				LOG("\nApplication Update exits with error -----");

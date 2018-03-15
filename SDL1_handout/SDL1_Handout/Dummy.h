@@ -141,13 +141,7 @@ class ModuleDummy : public Module
 
 	update_status PreUpdate()
 	{
-		LOG("Dummy PreUpdate!");
-		return update_status::UPDATE_CONTINUE;
-	}
-
-	update_status Update()
-	{
-		LOG("Dummy Update!");
+		//Input
 		while (SDL_PollEvent(&event) != 0)
 		{
 			switch (event.type)
@@ -240,7 +234,11 @@ class ModuleDummy : public Module
 				break;
 			}
 		}
+		return update_status::UPDATE_CONTINUE;
+	}
 
+	update_status Update()
+	{
 		//Logic
 		//- Timer
 		timer += 1000 / 60;
@@ -434,7 +432,11 @@ class ModuleDummy : public Module
 				objectiveR.h -= 20;//20 = 10% of the sprite size
 			}
 		}
+		return update_status::UPDATE_CONTINUE;
+	}
 
+	update_status PostUpdate()
+	{
 		//Render
 		//-Background
 		SDL_RenderCopy(renderer, backgroundTx, NULL, NULL);
@@ -478,12 +480,6 @@ class ModuleDummy : public Module
 		SDL_RenderCopy(renderer, p2Tx, NULL, &p2Rect);
 
 		SDL_RenderPresent(renderer);
-		return update_status::UPDATE_CONTINUE;
-	}
-
-	update_status PostUpdate()
-	{
-		LOG("Dummy PostUpdate!");
 		return update_status::UPDATE_CONTINUE;
 	}
 

@@ -17,20 +17,21 @@ class ModuleDummyESC : public Module
 	update_status PreUpdate()
 	{
 		LOG("DummyESC PreUpdate!");
-		if (_kbhit())
-		{
-			return update_status::UPDATE_STOP;
-		}
-		else
-		{
-			return update_status::UPDATE_CONTINUE;
-		}
+		return update_status::UPDATE_CONTINUE;
 	}
 
 	update_status Update()
 	{
 		LOG("DummyESC Update!");
-		return update_status::UPDATE_CONTINUE;
+		if(KeyPress())
+		{
+			return update_status::UPDATE_CONTINUE;
+		}
+		else
+		{
+			return update_status::UPDATE_STOP;
+		}
+		
 	}
 
 	update_status PostUpdate()
@@ -43,6 +44,18 @@ class ModuleDummyESC : public Module
 	{
 		LOG("DummyESC CleanUp!");
 		return true;
+	}
+
+	bool KeyPress()
+	{
+		if (_kbhit())
+		{
+			return update_status::UPDATE_STOP;
+		}
+		else
+		{
+			return update_status::UPDATE_CONTINUE;
+		}
 	}
 };
 
